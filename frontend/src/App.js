@@ -6,12 +6,25 @@ import {
 
 import {Home} from "./views/home";
 import {WaitingRoom} from "./views/waitingRoom";
-import {AppBar, Box, Toolbar, Typography, Link as MaterialLink} from "@mui/material";
+import {AppBar, Box, Toolbar, Typography, Link as MaterialLink, ThemeProvider, createTheme} from "@mui/material";
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
+import {Instructions} from "./views/instructions";
+
+const THEME = createTheme({
+    typography: {
+        fontFamily: [
+            "Nunito",
+            "Roboto",
+            "Helvetica Neue",
+            "Arial",
+            "sans-serif"
+        ].join(",")
+    }
+})
 
 function App() {
     return (
-        <div>
+        <ThemeProvider theme={THEME}>
             <Box sx={{flexGrow: 1}}>
                 <AppBar position="static">
                     <Toolbar>
@@ -23,7 +36,8 @@ function App() {
                             <MaterialLink component={Link} to="/" color="inherit" sx={{m: 1}}>Home</MaterialLink>
                             <MaterialLink component={Link} to="/wait" color="inherit" sx={{m: 1}}>Waiting
                                 Room</MaterialLink>
-                            <MaterialLink component={Link} to="/users" color="inherit" sx={{m: 1}}>Users</MaterialLink>
+                            <MaterialLink component={Link} to="/instructions" color="inherit"
+                                          sx={{m: 1}}>Instructions</MaterialLink>
                         </nav>
                     </Toolbar>
                 </AppBar>
@@ -31,18 +45,13 @@ function App() {
 
             <Box sx={{m: 1}}>
                 <Routes>
-
                     <Route path="/" exact element={<Home/>}/>
-                    <Route path="/users" exact element={<Users/>}/>
+                    <Route path="/instructions" exact element={<Instructions/>}/>
                     <Route path="/wait" exact element={<WaitingRoom/>}/>
                 </Routes>
             </Box>
-        </div>
+        </ThemeProvider>
     );
-}
-
-function Users() {
-    return <h1>Users</h1>;
 }
 
 export default App;
