@@ -1,7 +1,8 @@
 import {
     Routes,
     Route,
-    Link
+    Link,
+    useNavigate
 } from "react-router-dom";
 
 import {Home} from "./views/home";
@@ -9,6 +10,7 @@ import {WaitingRoom} from "./views/waitingRoom";
 import {AppBar, Box, Toolbar, Typography, Link as MaterialLink, ThemeProvider, createTheme} from "@mui/material";
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import {Instructions} from "./views/instructions";
+import game from "./services/spyfallGame";
 
 const THEME = createTheme({
     typography: {
@@ -23,6 +25,8 @@ const THEME = createTheme({
 })
 
 function App() {
+    let navigate = useNavigate()
+
     return (
         <ThemeProvider theme={THEME}>
             <Box sx={{flexGrow: 1}}>
@@ -45,9 +49,9 @@ function App() {
 
             <Box sx={{m: 1}}>
                 <Routes>
-                    <Route path="/" exact element={<Home/>}/>
+                    <Route path="/" exact element={<Home navigate={navigate}/>}/>
                     <Route path="/instructions" exact element={<Instructions/>}/>
-                    <Route path="/wait" exact element={<WaitingRoom/>}/>
+                    <Route path="/wait" exact element={<WaitingRoom game={game()}/>}/>
                 </Routes>
             </Box>
         </ThemeProvider>

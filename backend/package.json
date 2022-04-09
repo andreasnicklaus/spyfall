@@ -11,6 +11,8 @@
     "start": "node src/index.js"
   },
   "dependencies": {
+    "dotenv": "^16.0.0",
+    "uuid": "^8.3.2",
     "ws": "^8.5.0"
   },
   "type": "module"
