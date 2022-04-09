@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import {Link} from "react-router-dom";
 import game from "../services/spyfallGame";
+import {addSnack} from "../services/snackBarService";
 
 
 export class Home extends Component {
@@ -19,8 +20,10 @@ export class Home extends Component {
         super(props);
         this.state = {
             joinDialogOpen: false,
+            createDialogOpen: false,
             playerName: "",
-            roomCode: ""
+            roomCode: "",
+            message: ""
         }
     }
 
@@ -40,22 +43,43 @@ export class Home extends Component {
         this.setState({...this.state, joinDialogOpen: false})
     }
 
+    openCreateDialog = () => {
+        this.setState({...this.state, createDialogOpen: true})
+    }
+
+    closeCreateDialog = () => {
+        this.setState({...this.state, createDialogOpen: false})
+    }
+
     joinRoom = () => {
-        game().setRoomCode(this.state.roomCode)
-        game().setPlayerName(this.state.playerName)
-        game().playerList = [...game().playerList, this.state.playerName]
-        this.props.navigate("/wait")
+        game.setRoomCode(this.state.roomCode)
+        game.setPlayerName(this.state.playerName)
+        game.joinRoom()
+    }
+
+    createRoom = () => {
+        game.setPlayerName(this.state.playerName)
+        game.setMinutes(5)
+        game.createRoom()
+    }
+
+    test = () => {
+        // sendMessage({message: "Test message"})
+        addSnack("This was a test")
     }
 
     render() {
         return <div>
+            <p>{this.state.message}</p>
             <Box height={"80vh"} display={"flex"} flexDirection={"column"} alignItems={"center"}
                  justifyContent={"center"}>
                 <Typography sx={{m: 1}} variant={"h1"}>Spyfall</Typography>
-                <Button sx={{m: 1}} component={Link} to={"/wait"} variant={"contained"}>Host a game!</Button>
+                <Button sx={{m: 1}} onClick={this.openCreateDialog} variant={"contained"}>Host a game!</Button>
                 <Button sx={{m: 1}} onClick={this.openJoinDialog} variant={"outlined"}>Join a game!</Button>
                 <Button sx={{m: 1}} component={Link} to={"/instructions"} variant={"text"}>Instructions</Button>
+                <Button sx={{m: 1}} onClick={this.test} variant={"text"}>Test</Button>
             </Box>
+
             <Dialog
                 open={this.state.joinDialogOpen}
                 onClose={this.closeJoinDialog}>
@@ -74,6 +98,26 @@ export class Home extends Component {
                     <DialogActions sx={{m: 1}}>
                         <Button onClick={this.closeJoinDialog}>Cancel</Button>
                         <Button onClick={this.joinRoom}>Join</Button>
+                    </DialogActions>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog
+                open={this.state.createDialogOpen}
+                onClose={this.closeCreateDialog}>
+                <DialogTitle>Create a room</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Enter your name to create a room and play with your friends.
+                    </DialogContentText>
+                    <TextField autoFocus label={"Name"} type={"text"} fullWidth variant={"standard"}
+                               value={this.state.playerName} onChange={this.changePlayerName}/>
+
+                    <p>{this.state.playerName}</p>
+
+                    <DialogActions sx={{m: 1}}>
+                        <Button onClick={this.closeCreateDialog}>Cancel</Button>
+                        <Button onClick={this.createRoom}>Create</Button>
                     </DialogActions>
                 </DialogContent>
             </Dialog>

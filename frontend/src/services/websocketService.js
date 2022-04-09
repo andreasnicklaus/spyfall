@@ -1,21 +1,30 @@
-import game from "./spyfallGame";
+let subscribers = {}
+
+export function subscribe(id, callbacks) {
+    subscribers.id = callbacks
+}
+
+export function unsubscribe(id) {
+    delete subscribers[id]
+}
 
 const ws = new WebSocket("ws://localhost:8080");
 
 ws.onerror = (error) => {
     console.log("Socket error", error)
+    Object.values(subscribers).forEach(({onErrorCallback}) => onErrorCallback())
 }
 
 ws.onclose = () => {
     console.warn("Websocket closed")
+    Object.values(subscribers).forEach(({onCloseCallback}) => onCloseCallback())
 }
 
 ws.onmessage = messageEvent => {
-    console.log("Received new message", messageEvent.data)
     const data = JSON.parse(messageEvent.data)
-    let {players} = data
-    console.log(typeof players, players)
-    game().setPlayerList(players)
+    Object.values(subscribers).forEach(({onMessageCallback}) => {
+        onMessageCallback(data)
+    })
 }
 
 export function sendMessage(message) {

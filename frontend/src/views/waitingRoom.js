@@ -5,36 +5,38 @@ import {Button} from "@mui/material";
 export class WaitingRoom extends Component {
     constructor(props) {
         super(props);
-        let {minutes, playerList, playerName, roomCode, startTime} = game()
+        let {minutes, playerList, playerName, roomCode, startTime} = game
         this.state = {minutes, playerList, playerName, roomCode, startTime}
     }
 
     updateGame = (game) => {
-        console.log("updateGame", game)
         let {minutes, playerList, playerName, roomCode, startTime} = game
         this.setState({minutes, playerList, playerName, roomCode, startTime})
     }
 
+    componentDidMount() {
+        game.subscribe({next: this.nextCallback, error: this.errorCallback, complete: this.completeCallback})
+    }
 
-    join = () => game().join(
-        () => {
-            this.updateGame(game())
-        }
-    );
+    nextCallback = newGame => this.updateGame(newGame)
+    errorCallback = error => console.error(error)
+    completeCallback = () => console.warn("completeCallback")
 
-    leave = () => game().leave()
+    leave = () => game.leaveRoom()
 
-    test = () => game().sendTestMessage()
+    componentWillUnmount() {
+        this.leave()
+    }
 
     render() {
         return <div>
-            <p>Players: {this.props.game.playerList.join(', ')}</p>
-            <p>Minutes: {game().minutes}</p>
-            <p>Room Code: {game().roomCode}</p>
+            <p>Players: {this.state.playerList.join(', ')}</p>
+            <p>playerName: {this.state.playerName}</p>
+            <p>Minutes: {this.state.minutes}</p>
+            <p>Room Code: {this.state.roomCode}</p>
 
-            <Button onClick={this.join}>Join room</Button>
+            {/* TODO: Add Button to game room */}
             <Button onClick={this.leave}>Leave room</Button>
-            <Button onClick={this.test}>Test message</Button>
         </div>
     }
 }

@@ -21,22 +21,39 @@ function leave(roomCode, uuid) {
 }
 
 function broadCastMessage(roomCode, data) {
-    Object.entries(rooms[roomCode]).forEach(([userUuid, {socket}]) => {
+    Object.entries(rooms[roomCode]).forEach(([, {socket}]) => {
         socket.send(JSON.stringify(data))
     });
 }
 
 export function handleMessage(socket, uuid, data) {
     console.log("data", data)
-    const {meta, message, roomCode, playerName} = data;
+    let {meta, message, roomCode, playerName} = data;
 
     if (meta === "join") {
-        if (!rooms[roomCode]) rooms[roomCode] = {};
+        if (!rooms[roomCode]) {
+            socket.send(JSON.stringify({meta: "NoRoomWithRoomCode", roomCode}));
+            return
+        }
         if (!rooms[roomCode][uuid]) rooms[roomCode][uuid] = {socket, playerName};
     } else if (meta === "leave") {
         leave(roomCode, uuid)
+    } else if (meta === "create") {
+        // Create a random room code
+        while (!roomCode || rooms[roomCode]) roomCode = Math.random().toString(36).substring(0, 5)
+
+        // Create a room
+        rooms[roomCode] = {}
+
+        // Add user to the new room
+        rooms[roomCode][uuid] = {socket, playerName}
+        console.log(`Room ${roomCode} created`)
+
+        // Send confirmation with room code
+        socket.send(JSON.stringify({meta: "RoomCreated", roomCode}))
     } else if (!meta) {
         if (!rooms[roomCode]) return
+        console.log(`Sending back message: ${message}`)
         broadCastMessage(roomCode, {message})
     }
 
@@ -49,5 +66,15 @@ export function handleMessage(socket, uuid, data) {
 }
 
 export function handleClose(uuid) {
-    Object.keys(rooms).forEach(room => leave(room))
+    console.log(`User ${uuid} closed the connection`)
+    Object.keys(rooms).forEach(roomCode => {
+        if (rooms[roomCode][uuid]) {
+            leave(roomCode, uuid)
+            broadCastMessage(roomCode, {
+                players: Object.keys(rooms[roomCode]).map(
+                    uuid => rooms[roomCode][uuid].playerName
+                )
+            })
+        }
+    })
 }

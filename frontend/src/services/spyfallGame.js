@@ -1,77 +1,95 @@
-import {sendMessage} from "./websocketService";
-// import { Observable } from 'rxjs';
+import {sendMessage, subscribe} from "./websocketService";
+import {addSnack} from "./snackBarService";
+import route from "./routerService";
 
+//TODO: Add game leader
 
 class SpyfallGame {
-    subscribers = []
+    subscribers;
+    roomCode;
+    playerName;
+    playerList;
+    minutes;
+    startTime;
+    constructor() {
+        this.subscribers = [];
+        this.playerList = [];
+        this.minutes = 6;
+        // TODO: add onCloseCallback and onErrorCallback
+        subscribe("SpyfallGame", {onMessageCallback: this.messageHandler})
+    }
 
     subscribe(callback) {
         this.subscribers.push(callback)
     }
     updateSubs() {
-        this.subscribers.forEach( next => {
-            console.log("next", next)
+        this.subscribers.forEach( ({next}) => {
             next(this);
         })
     }
-
-
-    roomCode = null
-    playerName = null;
-    playerList = [];
-    minutes = 6;
-    startTime = null;
-
     setPlayerName(name) {
         this.playerName = name;
         this.updateSubs();
     }
-
     setMinutes(min) {
         this.minutes = min;
         this.updateSubs();
     }
-
     setRoomCode(code) {
         this.roomCode = code;
         this.updateSubs()
     }
-
     setPlayerList(players){
         this.playerList = players;
         this.updateSubs();
     }
+    resetGame() {
+        this.playerList = [];
+        this.minutes = 6;
+        this.playerName = null;
+        this.roomCode = null;
+        this.startTime = null;
+    }
+    messageHandler = (msg) => {
+        const {meta, roomCode, players} = msg
+        if (meta === "RoomCreated") {
+            this.setRoomCode(roomCode)
+        } else if (meta === "NoRoomWithRoomCode") {
+            addSnack(`Error:  Room code ${roomCode} does not exist`)
+            console.warn(`Error:  Room code ${roomCode} does not exist`)
+            route("/")
+            this.resetGame()
+        }
+        if (players) {
+            this.setPlayerList(players)
+        }
+    }
 
-    join(callback) {
-        this.subscribe(callback)
+    joinRoom() {
         sendMessage({
             meta: "join",
             roomCode: this.roomCode,
             playerName: this.playerName
         })
+        route("/wait")
     }
 
-    leave() {
-        // TODO: unsubscribe?
+    createRoom() {
         sendMessage({
-            meta: "leave",
-            roomCode: this.roomCode
+            meta: "create",
+            playerName: this.playerName
         })
+        route("/wait")
     }
 
-    sendTestMessage() {
-        sendMessage({
-            roomCode: this.roomCode,
-            message: "Test message"
-        })
+    leaveRoom() {
+        if (this.roomCode) {
+            sendMessage({
+                meta: "leave",
+                roomCode: this.roomCode
+            })
+        }
     }
 }
 
-let singletonGame = null;
-
-export default function game() {
-    if (singletonGame == null) {
-        singletonGame = new SpyfallGame();
-    }
-    return singletonGame;
-}
+export default new SpyfallGame();
