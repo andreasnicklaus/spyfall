@@ -2,21 +2,22 @@ import {sendMessage, subscribe} from "./websocketService";
 import {addSnack} from "./snackBarService";
 import route from "./routerService";
 
-//TODO: Add game leader
-
 class SpyfallGame {
     subscribers;
     roomCode;
     playerName;
     playerList;
     minutes;
-    startTime;
+    startTime; // TODO: Do I still need this
     constructor() {
         this.subscribers = [];
         this.playerList = [];
         this.minutes = 6;
-        // TODO: add onCloseCallback and onErrorCallback
-        subscribe("SpyfallGame", {onMessageCallback: this.messageHandler})
+        subscribe("SpyfallGame", {
+            onMessageCallback: this.messageHandler,
+            onErrorCallback: () => {this.resetGame(); addSnack("Unknown websocket error"); route("/Home")},
+            onCloseCallback: () => {this.resetGame(); addSnack("Websocket closed"); route("/Home")}
+        })
     }
 
     subscribe(callback) {
@@ -49,6 +50,14 @@ class SpyfallGame {
         this.playerName = null;
         this.roomCode = null;
         this.startTime = null;
+    }
+
+    getGameLeader() {
+        return this.playerList.filter((player) => player.gameLeader)[0].playerName
+    }
+
+    isGameLeader() {
+        return this.getGameLeader() === this.playerName
     }
     messageHandler = (msg) => {
         const {meta, roomCode, players} = msg
@@ -89,6 +98,7 @@ class SpyfallGame {
                 roomCode: this.roomCode
             })
         }
+        route("/")
     }
 }
 

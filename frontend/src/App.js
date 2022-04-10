@@ -79,9 +79,9 @@ function App() {
                             Spyfall
                         </Typography>
                         <nav>
-                            <MaterialLink component={Link} to="/" color="inherit" sx={{m: 1}}>Home</MaterialLink>
-                            <MaterialLink component={Link} to="/wait" color="inherit" sx={{m: 1}}>Waiting
-                                Room</MaterialLink>
+                            {/*<MaterialLink component={Link} to="/" color="inherit" sx={{m: 1}}>Home</MaterialLink>*/}
+                            {/*<MaterialLink component={Link} to="/wait" color="inherit" sx={{m: 1}}>Waiting*/}
+                            {/*    Room</MaterialLink>*/}
                             <MaterialLink component={Link} to="/instructions" color="inherit"
                                           sx={{m: 1}}>Instructions</MaterialLink>
                         </nav>

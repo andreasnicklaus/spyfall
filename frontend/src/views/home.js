@@ -63,11 +63,6 @@ export class Home extends Component {
         game.createRoom()
     }
 
-    test = () => {
-        // sendMessage({message: "Test message"})
-        addSnack("This was a test")
-    }
-
     render() {
         return <div>
             <p>{this.state.message}</p>
@@ -77,7 +72,6 @@ export class Home extends Component {
                 <Button sx={{m: 1}} onClick={this.openCreateDialog} variant={"contained"}>Host a game!</Button>
                 <Button sx={{m: 1}} onClick={this.openJoinDialog} variant={"outlined"}>Join a game!</Button>
                 <Button sx={{m: 1}} component={Link} to={"/instructions"} variant={"text"}>Instructions</Button>
-                <Button sx={{m: 1}} onClick={this.test} variant={"text"}>Test</Button>
             </Box>
 
             <Dialog

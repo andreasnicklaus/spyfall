@@ -35,7 +35,7 @@ export function handleMessage(socket, uuid, data) {
             socket.send(JSON.stringify({meta: "NoRoomWithRoomCode", roomCode}));
             return
         }
-        if (!rooms[roomCode][uuid]) rooms[roomCode][uuid] = {socket, playerName};
+        if (!rooms[roomCode][uuid]) rooms[roomCode][uuid] = {socket, playerName, gameLeader: false};
     } else if (meta === "leave") {
         leave(roomCode, uuid)
     } else if (meta === "create") {
@@ -46,7 +46,7 @@ export function handleMessage(socket, uuid, data) {
         rooms[roomCode] = {}
 
         // Add user to the new room
-        rooms[roomCode][uuid] = {socket, playerName}
+        rooms[roomCode][uuid] = {socket, playerName, gameLeader: true}
         console.log(`Room ${roomCode} created`)
 
         // Send confirmation with room code
@@ -59,8 +59,8 @@ export function handleMessage(socket, uuid, data) {
 
     if (!rooms[roomCode]) return
     broadCastMessage(roomCode, {
-        players: Object.keys(rooms[roomCode]).map(
-            k => rooms[roomCode][k].playerName
+        players: Object.values(rooms[roomCode]).map(
+            p => ({playerName: p.playerName, gameLeader: p.gameLeader})
         )
     })
 }
@@ -70,11 +70,13 @@ export function handleClose(uuid) {
     Object.keys(rooms).forEach(roomCode => {
         if (rooms[roomCode][uuid]) {
             leave(roomCode, uuid)
-            broadCastMessage(roomCode, {
-                players: Object.keys(rooms[roomCode]).map(
-                    uuid => rooms[roomCode][uuid].playerName
-                )
-            })
+            if (rooms[roomCode]) {
+                broadCastMessage(roomCode, {
+                    players: Object.keys(rooms[roomCode]).map(
+                        uuid => rooms[roomCode][uuid].playerName
+                    )
+                })
+            }
         }
     })
 }
