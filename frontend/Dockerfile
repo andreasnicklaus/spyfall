@@ -1,4 +1,4 @@
-FROM node:15latest as build
+FROM node:15-latest as build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
