@@ -76,3 +76,29 @@ _Total score_
 You can play as many rounds as you want. The player with the most points wins the overall game.
 
 # Run it yourself
+
+In order to use it yourself you can either run it natively using like [this](#native-run)
+or do it via [Docker-compose](https://docs.docker.com/compose/) like [this](#docker-compose).
+
+## Native Run
+
+Install and run the backend:
+```bash
+cd backend
+npm ci
+npm start
+```
+
+Install and run the frontend:
+```bash
+cd frontend
+npm ci
+npm start
+```
+
+## Docker-compose
+
+Using docker and docker-compose you can start the game with this command:
+```bash
+docker-compose up
+```

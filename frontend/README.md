@@ -1,70 +1,30 @@
-# Getting Started with Create React App
+# Spyfall Webapp
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Using [React](https://reactjs.org/), the web frontend for the Spyfall game can be controlled over websockets.
+You can access the site at [](http://localhost:82) when hosted using docker-compose and at
+[](http://localhost:9000) when you host it natively through NodeJS.
 
-## Available Scripts
+![Home Screen Screenshot](./doc/screenshot_home.png)
 
-In the project directory, you can run:
 
-### `npm start`
+When you host a game or join a running one using the room code, you will be navigated to a waiting room.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+![Waiting Room Screenshot](./doc/screenshot_waiting_room.png)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+The game leader will be able to change the length of the game and to kick players from the room.
+When all players flip their switch to ready up, the leader can also start the game.
 
-### `npm test`
+Once a game is started, you will be navigated to the game room. In the game room, the agents will be able to
+see the round's location.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+![Game Room Screenshot](./doc/screenshot_game_room.png)
 
-### `npm run build`
+The spy will only not be able to see this!
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# IMPORTANT!
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The game is based on websockets and data send through the server by the game leader.
+Once the game leader leaves a game, a lot of unwanted behaviour can occur.
+You might need to restart the game.
