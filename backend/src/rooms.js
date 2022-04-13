@@ -63,8 +63,7 @@ export function handleMessage(socket, uuid, data) {
         leave(roomCode, uuid)
     } else if (meta === "create") {
         // Create a random room code
-        // while (!roomCode || rooms[roomCode]) roomCode = Math.random().toString(36).substring(0, 5)
-        roomCode = "abcd"
+        while (!roomCode || rooms[roomCode]) roomCode = Math.random().toString(36).substring(0, 5)
 
         // Create a room
         rooms[roomCode] = {}
