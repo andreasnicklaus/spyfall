@@ -12,7 +12,6 @@ import {
 } from "@mui/material";
 import {Link} from "react-router-dom";
 import game from "../services/spyfallGame";
-import {addSnack} from "../services/snackBarService";
 
 
 export class Home extends Component {
@@ -87,11 +86,12 @@ export class Home extends Component {
                     <TextField label={"Room Code"} type={"text"} fullWidth variant={"standard"}
                                value={this.state.roomCode} onChange={this.changeRoomCode}/>
 
-                    <p>{this.state.playerName}:{this.state.roomCode}</p>
-
                     <DialogActions sx={{m: 1}}>
                         <Button onClick={this.closeJoinDialog}>Cancel</Button>
-                        <Button onClick={this.joinRoom}>Join</Button>
+                        <Button
+                            onClick={this.joinRoom}
+                            disabled={this.state.playerName === "" || this.state.roomCode === ""}
+                        >Join</Button>
                     </DialogActions>
                 </DialogContent>
             </Dialog>
@@ -107,11 +107,12 @@ export class Home extends Component {
                     <TextField autoFocus label={"Name"} type={"text"} fullWidth variant={"standard"}
                                value={this.state.playerName} onChange={this.changePlayerName}/>
 
-                    <p>{this.state.playerName}</p>
-
                     <DialogActions sx={{m: 1}}>
                         <Button onClick={this.closeCreateDialog}>Cancel</Button>
-                        <Button onClick={this.createRoom}>Create</Button>
+                        <Button
+                            onClick={this.createRoom}
+                            disabled={this.state.playerName === ""}
+                        >Create</Button>
                     </DialogActions>
                 </DialogContent>
             </Dialog>

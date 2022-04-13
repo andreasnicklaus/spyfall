@@ -8,6 +8,7 @@ import {
 import {Home} from "./views/home";
 import {WaitingRoom} from "./views/waitingRoom";
 import {Instructions} from "./views/instructions";
+import {GameRoom} from "./views/gameRoom";
 import {
     AppBar,
     Box,
@@ -16,12 +17,12 @@ import {
     Link as MaterialLink,
     ThemeProvider,
     createTheme,
-    Snackbar, Button, IconButton
+    Snackbar, IconButton
 } from "@mui/material";
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import CloseIcon from '@mui/icons-material/Close';
 import {useEffect, useState, Fragment} from "react";
-import {initialize} from "./services/routerService";
+import route, {initialize} from "./services/routerService";
 import {subscribe, unsubscribe} from "./services/snackBarService";
 
 const THEME = createTheme({
@@ -55,9 +56,9 @@ function App() {
 
     const action = (
         <Fragment>
-            <Button color="secondary" size="small" onClick={closeSnackBar}>
-                CLOSE
-            </Button>
+            {/*<Button color="secondary" size="small" onClick={closeSnackBar}>*/}
+            {/*    CLOSE*/}
+            {/*</Button>*/}
             <IconButton
                 size="small"
                 aria-label="close"
@@ -75,13 +76,10 @@ function App() {
                 <AppBar position="static">
                     <Toolbar>
                         <FingerprintIcon sx={{m: 1}}/>
-                        <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
+                        <Typography variant="h5" component="div" sx={{flexGrow: 1}} onClick={() => route("/")}>
                             Spyfall
                         </Typography>
                         <nav>
-                            {/*<MaterialLink component={Link} to="/" color="inherit" sx={{m: 1}}>Home</MaterialLink>*/}
-                            {/*<MaterialLink component={Link} to="/wait" color="inherit" sx={{m: 1}}>Waiting*/}
-                            {/*    Room</MaterialLink>*/}
                             <MaterialLink component={Link} to="/instructions" color="inherit"
                                           sx={{m: 1}}>Instructions</MaterialLink>
                         </nav>
@@ -94,7 +92,7 @@ function App() {
                     <Route path="/" exact element={<Home/>}/>
                     <Route path="/instructions" exact element={<Instructions/>}/>
                     <Route path="/wait" exact element={<WaitingRoom/>}/>
-                {/*  TODO: Add Game Room  */}
+                    <Route path="/game" exact element={<GameRoom/>}/>
                 </Routes>
             </Box>
 

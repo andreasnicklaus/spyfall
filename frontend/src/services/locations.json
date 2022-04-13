@@ -1,0 +1,58 @@
+[
+  {
+    "name": "Yacht",
+    "src": "/assets/img/yacht.jpg"
+  },
+  {
+    "name": "Bar",
+    "src": "/assets/img/bar.jpg"
+  },
+  {
+    "name": "Cemetery",
+    "src": "/assets/img/cemetery.jpg"
+  },
+  {
+    "name": "Beach House",
+    "src": "/assets/img/beach-house.jpg"
+  },
+  {
+    "name": "Coffee Shop",
+    "src": "/assets/img/coffee-shop.jpg"
+  },
+  {
+    "name": "Concert",
+    "src": "/assets/img/concert.jpg"
+  },
+  {
+    "name": "Cruise Ship",
+    "src": "/assets/img/cruise-ship.jpg"
+  },
+  {
+    "name": "Hospital",
+    "src": "/assets/img/hospital.jpg"
+  },
+  {
+    "name": "Jail",
+    "src": "/assets/img/jail.jpg"
+  },
+  {
+    "name": "Restaurant",
+    "src": "/assets/img/restaurant.jpg"
+  },
+  {
+    "name": "Strip Club",
+    "src": "/assets/img/strip-club.jpg"
+  },
+  {
+    "name": "Supermarket",
+    "src": "/assets/img/supermarket.jpg"
+  },
+  {
+    "name": "Train Station",
+    "src": "/assets/img/train-station.jpg"
+  },
+  {
+    "name": "Wedding",
+    "src": "/assets/img/wedding.jpg"
+  }
+]
