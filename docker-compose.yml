@@ -5,12 +5,20 @@ services:
     build:
       context: frontend
     ports:
-      - "82:80"
+      - "92:80"
     depends_on:
       - backend
+    networks:
+      - nginx_proxy
 
   backend:
     build:
       context: backend
     ports:
       - "8080:8080"
+    networks:
+      - nginx_proxy
+
+networks:
+  nginx_proxy:
+    external: true

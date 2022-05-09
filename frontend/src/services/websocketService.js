@@ -8,7 +8,7 @@ export function unsubscribe(id) {
     delete subscribers[id]
 }
 
-const ws = new WebSocket(`ws://${window.location.hostname}:8080`);
+const ws = new WebSocket(`wss://${window.location.hostname}/ws`);
 
 ws.onerror = (error) => {
     console.log("Socket error", error)

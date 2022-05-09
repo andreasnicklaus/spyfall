@@ -4,7 +4,7 @@
   "author": {
     "name": "Andreas Nicklaus",
     "email": "me@andreasnicklaus.de",
-    "url": "http://andreasnicklaus.de"
+    "url": "https://andreasnicklaus.de"
   },
   "main": "src/index.js",
   "scripts": {
