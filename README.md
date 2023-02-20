@@ -1,5 +1,7 @@
 # Spyfall
 
+[Play now](https://spyfall.andreasnicklaus.de) ⏩
+
 **Welcome, Agent!**
 
 You're a detective, but someone in your department is an enemy
