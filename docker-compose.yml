@@ -10,14 +10,16 @@ services:
       - backend
     networks:
       - nginx_proxy
+    restart: unless-stopped
 
   backend:
     build:
       context: backend
     ports:
-      - "8080:8080"
+      - "8082:8080"
     networks:
       - nginx_proxy
+    restart: unless-stopped
 
 networks:
   nginx_proxy:
