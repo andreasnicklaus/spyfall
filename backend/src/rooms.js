@@ -2,111 +2,131 @@ const rooms = {}
 
 function leave(roomCode, uuid) {
     if (!rooms[roomCode]) {
-        console.warn(`Room ${roomCode} does not exist`)
+        console.warn(new Date().toLocaleString('de'), `Room ${roomCode} does not exist`)
         return;
     }
 
-    if (!rooms[roomCode][uuid]) {
-        console.warn(`User ${uuid} is not in room ${roomCode}`)
+    if (!rooms[roomCode].players[uuid]) {
+        console.warn(new Date().toLocaleString('de'), `User ${uuid} is not in room ${roomCode}`)
         return;
     }
 
-    if (Object.keys(rooms[roomCode]).length === 1) {
-        console.log(`Room ${roomCode} deleted.`)
+    if (Object.keys(rooms[roomCode].players).length === 1) {
+        console.log(new Date().toLocaleString('de'), `Room ${roomCode} deleted.`)
         delete rooms[roomCode];
     } else {
-        console.log(`User ${uuid} left room ${roomCode}`)
-        delete rooms[roomCode][uuid]
+        console.log(new Date().toLocaleString('de'), `User ${uuid} left room ${roomCode}`)
+        delete rooms[roomCode].players[uuid]
     }
 }
 
 function broadCastMessage(roomCode, data) {
-    Object.entries(rooms[roomCode]).forEach(([, {socket}]) => {
+    Object.entries(rooms[roomCode].players).forEach(([uuid, { socket }]) => {
         socket.send(JSON.stringify(data))
     });
 }
 
 function broadCastPlayerList(roomCode) {
-    Object.entries(rooms[roomCode]).forEach(([clientUUID, client]) => {
+    Object.entries(rooms[roomCode].players).forEach(([clientUUID, client]) => {
         client.socket.send(JSON.stringify({
-            players: Object.values(rooms[roomCode]).map(
+            players: Object.values(rooms[roomCode].players).map(
                 p => ({
                     playerName: p.playerName,
                     gameLeader: p.gameLeader,
                     ready: p.ready,
-                    spy: rooms[roomCode][clientUUID].spy ? p.spy : false
+                    spy: rooms[roomCode].players[clientUUID].spy ? p.spy : false
                 })
             )
         }))
     });
 }
 
-function broadCastLocation(roomCode, location) {
-    Object.entries(rooms[roomCode]).forEach(([clientUUID, client]) => {
-        if (!rooms[roomCode][clientUUID].spy) {
-            client.socket.send(JSON.stringify({location}))
+function broadCastOnlyNonSpyMessage(roomCode, data) {
+    Object.entries(rooms[roomCode].players).forEach(([clientUUID, client]) => {
+        if (!rooms[roomCode].players[clientUUID].spy) {
+            client.socket.send(JSON.stringify(data))
         }
     });
 }
 
+function broadCastOnlySpyMessage(roomCode, data) {
+    Object.entries(rooms[roomCode].players).forEach(([clientUUID, client]) => {
+        if (rooms[roomCode].players[clientUUID].spy) {
+            client.socket.send(JSON.stringify(data))
+        }
+    });
+}
+
+function broadCastLocation(roomCode) {
+    broadCastOnlyNonSpyMessage(roomCode, { location: rooms[roomCode].location })
+    console.log(new Date().toLocaleString('de'), 'Broadcasted location...')
+}
+
 export function handleMessage(socket, uuid, data) {
     // console.log("data", data)
-    let {meta, roomCode, playerName, ready, location} = data;
+    let { meta, roomCode, playerName, ready, location } = data;
 
     if (meta === "join") {
         if (!rooms[roomCode]) {
-            socket.send(JSON.stringify({type: "NoRoomWithRoomCode", roomCode}));
+            socket.send(JSON.stringify({ type: "NoRoomWithRoomCode", roomCode }));
             return
         }
-        if (!rooms[roomCode][uuid]) rooms[roomCode][uuid] = {socket, playerName, gameLeader: false, ready: false, spy: false};
+        if (!rooms[roomCode].players[uuid]) {
+            rooms[roomCode].players[uuid] = { socket, playerName, gameLeader: false, ready: false, spy: false };
+            broadCastLocation(roomCode)
+            console.log(new Date().toLocaleString('de'), `Player ${playerName} (uuid: ${uuid}) joined game room ${roomCode}`)
+        }
     } else if (meta === "leave") {
         leave(roomCode, uuid)
     } else if (meta === "create") {
         // Create a random room code
-        while (!roomCode || rooms[roomCode]) roomCode = Math.random().toString(36).substring(0, 5)
+        while (!roomCode || rooms[roomCode]) roomCode = Math.random().toString(36).substring(2, 5)
 
         // Create a room
-        rooms[roomCode] = {}
+        rooms[roomCode] = { players: {} }
 
         // Add user to the new room
-        rooms[roomCode][uuid] = {socket, playerName, gameLeader: true, ready: false, spy: false}
-        console.log(`Room ${roomCode} created`)
+        rooms[roomCode].players[uuid] = { socket, playerName, gameLeader: true, ready: false, spy: false }
+        console.log(new Date().toLocaleString('de'), `Room ${roomCode} created`)
 
         // Send confirmation with room code
-        socket.send(JSON.stringify({type: "RoomCreated", roomCode}))
+        socket.send(JSON.stringify({ type: "RoomCreated", roomCode }))
     } else if (meta === "readyUpdate") {
-        rooms[roomCode][uuid].ready = ready
+        rooms[roomCode].players[uuid].ready = ready
+        console.log(new Date().toLocaleString('de'), `Player ${rooms[roomCode].players[uuid].playerName || uuid} is ready`)
     } else if (meta === "playerKick") {
-        if (rooms[roomCode][uuid].gameLeader){
-            Object.keys(rooms[roomCode]).forEach((uuid) => {
-                if (rooms[roomCode][uuid].playerName === playerName) {
-                    rooms[roomCode][uuid].socket.send(JSON.stringify({
+        if (rooms[roomCode].players[uuid].gameLeader) {
+            Object.keys(rooms[roomCode].players).forEach((uuid) => {
+                if (rooms[roomCode].players[uuid].playerName === playerName) {
+                    rooms[roomCode].players[uuid].socket.send(JSON.stringify({
                         type: "kickedFromRoom"
                     }))
-                    delete rooms[roomCode][uuid]
+                    delete rooms[roomCode].players[uuid]
                 }
             })
+            console.log(new Date().toLocaleString('de'), `Player ${playerName} was kicked`)
         }
     } else if (meta === "chooseSpy") {
-        if (rooms[roomCode][uuid].gameLeader){
+        if (rooms[roomCode].players[uuid].gameLeader) {
             // When the game is restarted, the spy status has to be reset
-            Object.values(rooms[roomCode]).forEach(p => p.spy = false)
+            Object.values(rooms[roomCode].players).forEach(p => p.spy = false)
 
-            const uuids = Object.keys(rooms[roomCode])
-            rooms[roomCode][uuids[Math.floor(Math.random() * uuids.length)]].spy = true
+            const uuids = Object.keys(rooms[roomCode].players)
+            rooms[roomCode].players[uuids[Math.floor(Math.random() * uuids.length)]].spy = true
 
             // console.log("Chose spy. It is", Object.values(rooms[roomCode]).filter(p => p.spy)[0].playerName)
             // broadCastPlayerList(roomCode)
             // return
         }
     } else if (meta === "shareLocation") {
-        if (rooms[roomCode][uuid].gameLeader){
-            broadCastLocation(roomCode, location)
+        if (rooms[roomCode].players[uuid].gameLeader) {
+            rooms[roomCode].location = location
+            broadCastLocation(roomCode)
         }
     } else if (!meta) {
         if (!rooms[roomCode]) return
         // console.log(`Sending back message: ${JSON.stringify(data)}`)
-        broadCastMessage(roomCode, {...data})
+        broadCastMessage(roomCode, { ...data })
     }
 
     if (!rooms[roomCode]) return
@@ -115,14 +135,14 @@ export function handleMessage(socket, uuid, data) {
 }
 
 export function handleClose(uuid) {
-    console.log(`User ${uuid} closed the connection`)
+    console.log(new Date().toLocaleString('de'), `User ${uuid} closed the connection`)
     Object.keys(rooms).forEach(roomCode => {
-        if (rooms[roomCode][uuid]) {
+        if (rooms[roomCode].players[uuid]) {
             leave(roomCode, uuid)
             if (rooms[roomCode]) {
                 broadCastMessage(roomCode, {
-                    players: Object.keys(rooms[roomCode]).map(
-                        uuid => rooms[roomCode][uuid].playerName
+                    players: Object.keys(rooms[roomCode].players).map(
+                        uuid => rooms[roomCode].players[uuid].playerName
                     )
                 })
             }

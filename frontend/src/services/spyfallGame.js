@@ -1,5 +1,5 @@
-import {sendMessage, subscribe} from "./websocketService";
-import {addSnack} from "./snackBarService";
+import { sendMessage, subscribe } from "./websocketService";
+import { addSnack } from "./snackBarService";
 import route from "./routerService";
 import locations from "./locations.json"
 
@@ -12,6 +12,7 @@ class SpyfallGame {
     timer;
     startTime;
     location;
+
     constructor() {
         this.subscribers = {};
         this.playerList = [];
@@ -19,8 +20,8 @@ class SpyfallGame {
         this.time = "00:00";
         subscribe("SpyfallGame", {
             onMessageCallback: this.messageHandler,
-            onErrorCallback: () => {route("/"); this.resetGame(); addSnack("Unknown websocket error");},
-            onCloseCallback: () => {route("/"); this.resetGame(); addSnack("Websocket closed");}
+            onErrorCallback: (error) => { route("/"); this.resetGame(); addSnack("Unknown websocket error"); console.error(new Date().toLocaleString('de'), error) },
+            onCloseCallback: () => { route("/"); this.resetGame(); addSnack("Websocket closed"); console.warn(new Date().toLocaleString('de'), 'websocket closed due to close message from server') }
         })
     }
 
@@ -31,7 +32,7 @@ class SpyfallGame {
         delete this.subscribers[id]
     }
     updateSubs() {
-        Object.values(this.subscribers).forEach( ({next}) => {
+        Object.values(this.subscribers).forEach(({ next }) => {
             next(this);
         })
     }
@@ -47,7 +48,7 @@ class SpyfallGame {
         this.roomCode = code;
         this.updateSubs()
     }
-    setPlayerList(players){
+    setPlayerList(players) {
         this.playerList = players;
         this.updateSubs();
     }
@@ -77,10 +78,10 @@ class SpyfallGame {
         return this.getGameLeader() === this.playerName
     }
     isSpy() {
-        return this.playerList.some(({spy}) => spy)
+        return this.playerList.some(({ spy }) => spy)
     }
     messageHandler = (msg) => {
-        const {type, roomCode, players, minutes, time, location} = msg
+        const { type, roomCode, players, minutes, time, location } = msg
 
         if (minutes) this.setMinutes(minutes);
         if (players) this.setPlayerList(players);
@@ -102,6 +103,7 @@ class SpyfallGame {
             route("/game")
         } else if (type === "timeUpdate") {
             this.setTime(time)
+            if (window.location.pathname !== '/game') route("/game")
         }
     }
 
@@ -153,7 +155,7 @@ class SpyfallGame {
         }
     }
     allPlayersReady() {
-        return this.playerList.every(({ready}) => ready);
+        return this.playerList.every(({ ready }) => ready);
     }
     startGame() {
         this.chooseSpy()
@@ -180,7 +182,8 @@ class SpyfallGame {
             if (diff >= this.minutes * 60000) {
                 this.stopTimer()
                 addSnack("The game ended! Vote now!")
-                return}
+                return
+            }
 
             const minutesDiff = Math.ceil(diff / 60000)
             const secondDiff = Math.floor(diff / 1000) % 60

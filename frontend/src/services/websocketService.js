@@ -12,17 +12,17 @@ const ws = new WebSocket(`wss://${window.location.hostname}/ws`);
 
 ws.onerror = (error) => {
     console.log("Socket error", error)
-    Object.values(subscribers).forEach(({onErrorCallback}) => onErrorCallback())
+    Object.values(subscribers).forEach(({ onErrorCallback }) => onErrorCallback(error))
 }
 
 ws.onclose = () => {
     console.warn("Websocket closed")
-    Object.values(subscribers).forEach(({onCloseCallback}) => onCloseCallback())
+    Object.values(subscribers).forEach(({ onCloseCallback }) => onCloseCallback())
 }
 
 ws.onmessage = messageEvent => {
     const data = JSON.parse(messageEvent.data)
-    Object.values(subscribers).forEach(({onMessageCallback}) => {
+    Object.values(subscribers).forEach(({ onMessageCallback }) => {
         onMessageCallback(data)
     })
 }
