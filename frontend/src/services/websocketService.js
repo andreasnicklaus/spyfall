@@ -9,6 +9,7 @@ export function unsubscribe(id) {
 }
 
 const ws = new WebSocket(`wss://${window.location.hostname}/ws`);
+// const ws = new WebSocket(`ws://${window.location.hostname}:8080`);
 
 ws.onerror = (error) => {
     console.log("Socket error", error)
@@ -22,7 +23,8 @@ ws.onclose = () => {
 
 ws.onmessage = messageEvent => {
     const data = JSON.parse(messageEvent.data)
-    Object.values(subscribers).forEach(({ onMessageCallback }) => {
+    if (data.type === "ping") { ws.send(JSON.stringify({ type: "pong" })) }
+    else Object.values(subscribers).forEach(({ onMessageCallback }) => {
         onMessageCallback(data)
     })
 }
