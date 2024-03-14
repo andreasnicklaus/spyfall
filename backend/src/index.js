@@ -1,7 +1,7 @@
-import "dotenv/config";
-import { WebSocketServer } from "ws";
-import { handleClose, handleMessage } from "./rooms.js";
-import { v4 as uuidv4 } from "uuid"
+// import "dotenv/config";
+const { WebSocketServer } = require("ws");
+const { handleClose, handleMessage } = require("./rooms.js");
+const { v4: uuidv4 } = require("uuid")
 
 const PORT = process.env.PORT || 8080
 const wss = new WebSocketServer({ port: PORT });

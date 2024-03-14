@@ -62,7 +62,7 @@ function broadCastLocation(roomCode) {
     console.log(new Date().toLocaleString('de'), 'Broadcasted location...')
 }
 
-export function handleMessage(socket, uuid, data) {
+module.exports.handleMessage = function (socket, uuid, data) {
     // console.log("data", data)
     let { meta, roomCode, playerName, ready, location } = data;
 
@@ -134,7 +134,7 @@ export function handleMessage(socket, uuid, data) {
     broadCastPlayerList(roomCode)
 }
 
-export function handleClose(uuid) {
+module.exports.handleClose = function (uuid) {
     console.log(new Date().toLocaleString('de'), `User ${uuid} closed the connection`)
     Object.keys(rooms).forEach(roomCode => {
         if (rooms[roomCode].players[uuid]) {

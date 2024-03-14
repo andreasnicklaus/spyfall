@@ -11,10 +11,9 @@
     "start": "node src/index.js"
   },
   "dependencies": {
-    "dotenv": "^16.0.0",
-    "socket.io": "^4.4.1",
-    "uuid": "^8.3.2",
-    "ws": "^8.5.0"
-  },
-  "type": "module"
+    "dotenv": "^16.4.5",
+    "socket.io": "^4.7.5",
+    "uuid": "^9.0.1",
+    "ws": "^8.16.0"
+  }
 }
