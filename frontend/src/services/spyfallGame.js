@@ -212,4 +212,6 @@ class SpyfallGame {
     }
 }
 
-export default new SpyfallGame();
+const spyfallGame = new SpyfallGame();
+
+export default spyfallGame;
