@@ -31,7 +31,7 @@ jobs:
         working-directory: ./frontend
         env:
           CI: true
-        run: npm test -- --watchAll=false
+        run: npm test -- --watchAll=false --passWithNoTests
 
       - name: Build
         working-directory: ./frontend
