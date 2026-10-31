@@ -13,7 +13,7 @@
     "http-proxy-middleware": "2.0.10",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-router-dom": "6.22.3",
+    "react-router-dom": "6.30.6",
     "react-scripts": "5.0.1",
     "rxjs": "7.8.2",
     "socket.io-client": "4.7.5",
