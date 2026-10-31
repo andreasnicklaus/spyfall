@@ -14,12 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Git checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.4.0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4.4.0
         with:
-          node-version: 18
+          node-version: 18.20.8
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -40,7 +40,7 @@ jobs:
         run: npm run build
 
       - name: Build Docker image (no push)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v6.19.2
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
@@ -51,12 +51,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Git checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.4.0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4.4.0
         with:
-          node-version: 18
+          node-version: 18.20.8
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
@@ -69,7 +69,7 @@ jobs:
         run: node --check src/index.js && node --check src/rooms.js
 
       - name: Build Docker image (no push)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v6.19.2
         with:
           context: ./backend
           file: ./backend/Dockerfile
@@ -83,16 +83,16 @@ jobs:
     needs: [build-frontend, build-backend]
     steps:
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v3.7.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Git checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.4.0
 
       - name: Build and push frontend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v6.19.2
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
@@ -100,7 +100,7 @@ jobs:
           tags: anicklaus/spyfall_frontend
 
       - name: Build and push backend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v6.19.2
         with:
           context: ./backend
           file: ./backend/Dockerfile
