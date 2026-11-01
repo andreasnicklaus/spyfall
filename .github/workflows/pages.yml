@@ -1,0 +1,149 @@
+name: Build and Deploy to Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-26.04
+    outputs:
+      appChanged: ${{ steps.filter.outputs.app }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v4.0.3
+        id: filter
+        with:
+          filters: |
+            app:
+              - 'frontend/**'
+              - '.github/workflows/pages.yml'
+
+  install:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.appChanged == 'true'
+    timeout-minutes: 30
+    runs-on: ubuntu-26.04
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: "lts/*"
+      - name: Cache npm
+        uses: actions/cache@v6.1.0
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v6.1.0
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline
+
+  test:
+    needs: [detect-changes, install]
+    if: needs.detect-changes.outputs.appChanged == 'true'
+    timeout-minutes: 10
+    runs-on: ubuntu-26.04
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: "lts/*"
+      - name: Cache npm
+        uses: actions/cache@v6.1.0
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+      - name: Restore node_modules
+        uses: actions/cache@v6.1.0
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package-lock.json') }}
+      - name: Run Unit tests
+        run: npm test -- --watchAll=false --passWithNoTests
+
+  build:
+    timeout-minutes: 15
+    needs: [detect-changes, install]
+    if: needs.detect-changes.outputs.appChanged == 'true'
+    runs-on: ubuntu-26.04
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: "lts/*"
+      - name: Cache npm
+        uses: actions/cache@v6.1.0
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+      - name: Restore node_modules
+        uses: actions/cache@v6.1.0
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package-lock.json') }}
+      - name: Build app
+        run: npm run build
+
+      - name: Copy index.html to 404.html
+        run: cp dist/index.html dist/404.html
+
+      - name: Create CNAME file
+        run: echo spyfall.andreasnicklaus.de > dist/CNAME
+
+      - name: Upload Built files
+        id: deployment
+        uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          name: github-pages
+          path: frontend/dist
+          include-hidden-files: true
+
+  deploy:
+    needs:
+      - build
+      - test
+    if: github.ref == 'refs/heads/main'
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5.0.1
