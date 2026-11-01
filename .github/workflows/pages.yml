@@ -114,17 +114,17 @@ jobs:
         run: npm run build
 
       - name: Copy index.html to 404.html
-        run: cp dist/index.html dist/404.html
+        run: cp build/index.html build/404.html
 
       - name: Create CNAME file
-        run: echo spyfall.andreasnicklaus.de > dist/CNAME
+        run: echo spyfall.andreasnicklaus.de > build/CNAME
 
       - name: Upload Built files
         id: deployment
         uses: actions/upload-pages-artifact@v5.0.0
         with:
           name: github-pages
-          path: frontend/dist
+          path: frontend/build
           include-hidden-files: true
 
   deploy:
