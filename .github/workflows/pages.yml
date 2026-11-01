@@ -116,8 +116,9 @@ jobs:
       - name: Copy index.html to 404.html
         run: cp build/index.html build/404.html
 
-      - name: Create CNAME file
-        run: echo spyfall.andreasnicklaus.de > build/CNAME
+      # Disabled for now while deploying on github.io/spyfall
+      # - name: Create CNAME file
+      #   run: echo spyfall.andreasnicklaus.de > build/CNAME
 
       - name: Upload Built files
         id: deployment
