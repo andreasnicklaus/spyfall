@@ -45,7 +45,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: "**/package.json"
       - name: Install dependencies
-        run: npm i
+        run: npm ci --prefer-offline
       - name: Run Node checks
         run: node --check src
 
