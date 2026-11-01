@@ -1,0 +1,28 @@
+/* Hallmark · shape: Bento Grid · genre: playful · theme: Hum (deal 1/3, seed spyfall-party-game-webapp-4005·9d7b4a0c·2026-11-01·r0) · job: join · draw: d9d55e
+ * hero: Stage · nav: edge-aligned wordmark + one action, retracting on scroll · footer: centered mast, wordmark over links · imagery: the product built live + 14 location photos · signature: the location card chasing a spy reveal
+ * axes: light/rounded-sans/chromatic-yellow · posture: full-palette · contrast: pass · fold: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V4 · weakest: E, MUI defaults needed token overrides; added disabled/active/focus CSS, dialog + input-label overrides, GH Pages base */
+@import url("./tokens.css");
+@import url("./base.css");
+
+/* app shell helpers */
+.app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+.card-stock { background: var(--grain, none), var(--fibre, none), var(--color-card); border-radius: var(--radius-stock); box-shadow: inset 0 0 0 1px var(--color-rule), 0 5px 0 0 var(--color-edge); }
+.paper-sheet { background: var(--color-card); border-radius: var(--radius-card); box-shadow: var(--shadow-paper); }
+.torn { clip-path: polygon(0% 0%, 100% 0%, 100% 92%, 97% 95%, 93% 91%, 88% 96%, 82% 92%, 76% 97%, 70% 93%, 64% 96%, 58% 91%, 52% 97%, 46% 93%, 40% 96%, 34% 91%, 28% 97%, 22% 93%, 16% 96%, 10% 91%, 4% 97%, 0% 93%); }
+.torn-frame { filter: drop-shadow(0 5px 0 var(--color-fringe)) drop-shadow(0 10px 14px var(--color-fringe-shadow)); }
+.torn-frame > .torn { display: block; width: 100%; filter: saturate(1.06) brightness(1.04); }
+.btn-press { transition: transform var(--dur-micro) var(--ease-snap), box-shadow var(--dur-micro) var(--ease-snap); }
+.btn-press:hover { transform: translateY(-2px); }
+.btn-press:active { transform: translateY(4px); }
+@media (prefers-reduced-motion: reduce) { .btn-press, .btn-press:hover, .btn-press:active { transform: none; transition: none; } }
+
+/* disabled + active states (gate 26b, 39a) */
+button:disabled, button[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+button:active { transform: translateY(1px); }
+
+/* focus ring (gate 26a) */
+.MuiButtonBase-root:focus-visible, button:focus-visible, a:focus-visible, input:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+}
