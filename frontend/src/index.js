@@ -4,7 +4,7 @@ import App from "./App";
 import { BrowserRouter } from "react-router-dom";
 import "./styles/hallmark.css";
 
-const basename = process.env.PUBLIC_URL;
+const basename = process.env.PUBLIC_URL || "/";
 
 ReactDOM.render(
   <React.StrictMode>
