@@ -1,7 +1,7 @@
-let subscribers = []
+let subscribers = {}
 
 export function subscribe(id, callbacks) {
-    subscribers.id = callbacks
+    subscribers[id] = callbacks
 }
 
 export function unsubscribe(id) {

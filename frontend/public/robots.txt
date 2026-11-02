@@ -1,3 +1,7 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /wait
+Disallow: /game
+
+Sitemap: https://spyfall.andreasnicklaus.de/sitemap.xml

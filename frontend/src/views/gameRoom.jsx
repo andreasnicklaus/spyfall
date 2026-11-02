@@ -19,7 +19,7 @@ export class GameRoom extends Component {
     }
 
     componentWillUnmount() {
-        game.unsubscribe()
+        game.unsubscribe("GameRoom")
         game.leaveRoom()
     }
 
