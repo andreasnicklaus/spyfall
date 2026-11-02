@@ -8,15 +8,15 @@ You're a detective, but someone in your department is an enemy
 spy. Everyone is invited to a social gathering. Everyone but the spy has gotten
 the invitation.
 
-Your job is it to discover which player is the spy and save the integrity of
-you whole organisation.
+Your job is to discover which player is the spy and save the integrity of
+your whole organisation.
 
 ## Instructions
 
 | What you will need |                                                           |
 |:------------------:|:---------------------------------------------------------:|
 |    Player count    |                       4-12 players                        |
-|  Player location   |               in the same room or zoom call               |
+|  Player location   |               in the same room or on a call               |
 |        Time        | 6-10 minutes: the smaller the group, the shorter the time |
 
 | How to win |                                                                         |
@@ -79,28 +79,74 @@ You can play as many rounds as you want. The player with the most points wins th
 
 # Run it yourself
 
-In order to use it yourself you can either run it natively using like [this](#native-run)
-or do it via [Docker-compose](https://docs.docker.com/compose/) like [this](#docker-compose).
+In order to use it yourself you can either run it natively like [this](#native-run)
+or do it via [Docker Compose](https://docs.docker.com/compose/) like [this](#docker-compose).
 
-## Native Run
+## Prerequisites
+
+- Node.js (LTS, tested with v26)
+- npm
+- (optional) Docker & Docker Compose
+
+## Tech stack
+
+- **Frontend:** React 19, React Router 7, Material UI 9, socket.io-client, styled with the Hallmark design system
+- **Backend:** Node.js WebSocket server (`ws`) for room management and data sharing
+
+## Native run
 
 Install and run the backend:
+
 ```bash
 cd backend
 npm ci
 npm start
 ```
 
+The backend listens on port `8080` by default (override with the `PORT` environment variable).
+
 Install and run the frontend:
+
 ```bash
 cd frontend
 npm ci
 npm start
 ```
 
-## Docker-compose
+The dev server runs on [http://localhost:3000](http://localhost:3000). For local development the
+frontend talks to the backend directly, so uncomment the `ws://...:8080` line in
+`frontend/src/services/websocketService.js`.
 
-Using docker and docker-compose you can start the game with this command:
+## Docker Compose
+
+Using Docker and Docker Compose you can start the game with:
+
 ```bash
 docker-compose up
 ```
+
+- Frontend: [http://localhost:92](http://localhost:92)
+- Backend: [http://localhost:8082](http://localhost:8082)
+
+The compose file expects an external `nginx_proxy` network that reverse-proxies `/ws` to the backend.
+
+## Deployment
+
+- **Frontend** is deployed to GitHub Pages at [https://spyfall.andreasnicklaus.de](https://spyfall.andreasnicklaus.de)
+  via `.github/workflows/pages.yml`.
+- **Backend** image is published to Docker Hub as `anicklaus/spyfall_backend`
+  via `.github/workflows/server.yml`.
+
+## Project structure
+
+```
+spyfall/
+├── frontend/          # React webapp
+├── backend/           # WebSocket server
+├── docker-compose.yml
+└── .github/workflows/ # CI/CD (pages + server image)
+```
+
+## License
+
+See [LICENSE](./LICENSE).

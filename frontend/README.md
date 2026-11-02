@@ -1,30 +1,51 @@
 # Spyfall Webapp
 
-Using [React](https://reactjs.org/), the web frontend for the Spyfall game can be controlled over websockets.
-You can access the site at [](http://localhost:82) when hosted using docker-compose and at
-[](http://localhost:9000) when you host it natively through NodeJS.
+React frontend for the [Spyfall](../README.md) party game. Players host or join a room and
+play over WebSockets.
 
-![Home Screen Screenshot](./doc/screenshot_home.png)
+## Tech stack
 
+- React 19 & React Router 7
+- Material UI 9
+- socket.io-client
+- Hallmark design system (tokens and styles in `src/styles/`)
 
-When you host a game or join a running one using the room code, you will be navigated to a waiting room.
+## Development
 
-![Waiting Room Screenshot](./doc/screenshot_waiting_room.png)
+Install dependencies:
 
-The game leader will be able to change the length of the game and to kick players from the room.
-When all players flip their switch to ready up, the leader can also start the game.
+```bash
+npm ci
+```
 
-Once a game is started, you will be navigated to the game room. In the game room, the agents will be able to
-see the round's location.
+Run the dev server (http://localhost:3000):
 
-![Game Room Screenshot](./doc/screenshot_game_room.png)
+```bash
+npm start
+```
 
-The spy will only not be able to see this!
+Run tests:
+
+```bash
+npm test
+```
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+## Deployment
+
+The frontend is deployed to GitHub Pages at https://spyfall.andreasnicklaus.de via
+`.github/workflows/pages.yml`. The workflow builds the app, copies `index.html` to `404.html`
+for client-side routing, and creates the CNAME file.
 
 ---
 
 # IMPORTANT!
 
-The game is based on websockets and data send through the server by the game leader.
+The game is based on websockets and data sent through the server by the game leader.
 Once the game leader leaves a game, a lot of unwanted behaviour can occur.
 You might need to restart the game.
