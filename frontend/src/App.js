@@ -2,7 +2,8 @@ import {
     Routes,
     Route,
     Link,
-    useNavigate
+    useNavigate,
+    useLocation
 } from "react-router-dom";
 
 import { Home } from "./views/home";
@@ -15,7 +16,7 @@ import {
     Toolbar,
     Typography,
     Link as MaterialLink,
-    Snackbar, IconButton, Container,
+    Snackbar, IconButton, Container, Alert,
     useScrollTrigger, Slide
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -23,6 +24,7 @@ import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import CloseIcon from '@mui/icons-material/Close';
 import { useEffect, useState, Fragment } from "react";
 import route, { initialize } from "./services/routerService";
+import { Seo } from "./components/Seo";
 import { subscribe, unsubscribe } from "./services/snackBarService";
 
 const THEME = createTheme({
@@ -102,6 +104,31 @@ const THEME = createTheme({
 
 function App() {
     let navigate = useNavigate()
+    const location = useLocation()
+
+    const seoByPath = {
+        "/": {
+            title: "Spyfall - Online Party Game for Friends",
+            description: "Spyfall is a free online party game for 4 to 12 friends. Everyone knows the secret location except the spy.",
+            noindex: false
+        },
+        "/instructions": {
+            title: "Instructions | Spyfall",
+            description: "How to play Spyfall: rules, scoring, and winning conditions for the online party game.",
+            noindex: false
+        },
+        "/wait": {
+            title: "Waiting Room | Spyfall",
+            description: "Waiting room for a Spyfall game session.",
+            noindex: true
+        },
+        "/game": {
+            title: "Game Room | Spyfall",
+            description: "Active Spyfall game session.",
+            noindex: true
+        }
+    };
+    const seo = seoByPath[location.pathname] || { title: "Spyfall", noindex: true };
 
     const [message, setMessage] = useState("")
 
@@ -135,6 +162,7 @@ function App() {
     return (
         <ThemeProvider theme={THEME}>
             <Box className="app-shell" sx={{ flexGrow: 1 }}>
+                <Seo title={seo.title} description={seo.description} noindex={seo.noindex} />
                 <Slide appear={false} direction="down" in={!trigger}>
                     <AppBar position="sticky" elevation={0} sx={{
                         background: "var(--color-paper)",
@@ -187,12 +215,20 @@ function App() {
 
                 <Snackbar
                     open={message !== ""}
-                    autoHideDuration={5000}
+                    autoHideDuration={6000}
                     onClose={closeSnackBar}
-                    message={message}
-                    action={action}
-                    sx={{ "& .MuiSnackbarContent-root": { background: "var(--color-card)", color: "var(--color-ink)", borderRadius: "var(--radius-card)" } }}
-                />
+                    anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+                    sx={{ width: "100%", maxWidth: "100%", left: 0, right: 0, bottom: 0 }}
+                >
+                    <Alert
+                        severity={message.toLowerCase().includes("closed") || message.toLowerCase().includes("error") || message.toLowerCase().includes("kicked") || message.toLowerCase().includes("does not exist") ? "error" : message.toLowerCase().includes("ended") ? "success" : "info"}
+                        variant="filled"
+                        onClose={closeSnackBar}
+                        sx={{ width: "100%", borderRadius: 0 }}
+                    >
+                        {message}
+                    </Alert>
+                </Snackbar>
             </Box>
         </ThemeProvider>
     );

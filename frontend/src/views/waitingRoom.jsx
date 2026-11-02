@@ -109,6 +109,7 @@ export class WaitingRoom extends Component {
                                         }>
                                         <ListItemText
                                             primary={gameLeader ? <b>{playerName} (leader)</b> : playerName}
+                                            secondaryTypographyProps={{ component: "div" }}
                                             secondary={
                                                 <Chip size="small" label={ready ? "ready" : "not ready"}
                                                     color={ready ? "success" : "default"} sx={{ mt: 0.5 }} />

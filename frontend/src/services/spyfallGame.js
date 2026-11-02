@@ -26,7 +26,7 @@ class SpyfallGame {
     }
 
     subscribe(id, callback) {
-        this.subscribers.id = callback
+        this.subscribers[id] = callback
     }
     unsubscribe(id) {
         delete this.subscribers[id]
