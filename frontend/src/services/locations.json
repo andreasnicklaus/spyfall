@@ -1,58 +1,58 @@
 [
   {
     "name": "Yacht",
-    "src": "/spyfall/assets/img/yacht.jpg"
+    "src": "/assets/img/yacht.jpg"
   },
   {
     "name": "Bar",
-    "src": "/spyfall/assets/img/bar.jpg"
+    "src": "/assets/img/bar.jpg"
   },
   {
     "name": "Cemetery",
-    "src": "/spyfall/assets/img/cemetery.jpg"
+    "src": "/assets/img/cemetery.jpg"
   },
   {
     "name": "Beach House",
-    "src": "/spyfall/assets/img/beach-house.jpg"
+    "src": "/assets/img/beach-house.jpg"
   },
   {
     "name": "Coffee Shop",
-    "src": "/spyfall/assets/img/coffee-shop.jpg"
+    "src": "/assets/img/coffee-shop.jpg"
   },
   {
     "name": "Concert",
-    "src": "/spyfall/assets/img/concert.jpg"
+    "src": "/assets/img/concert.jpg"
   },
   {
     "name": "Cruise Ship",
-    "src": "/spyfall/assets/img/cruise-ship.jpg"
+    "src": "/assets/img/cruise-ship.jpg"
   },
   {
     "name": "Hospital",
-    "src": "/spyfall/assets/img/hospital.jpg"
+    "src": "/assets/img/hospital.jpg"
   },
   {
     "name": "Jail",
-    "src": "/spyfall/assets/img/jail.jpg"
+    "src": "/assets/img/jail.jpg"
   },
   {
     "name": "Restaurant",
-    "src": "/spyfall/assets/img/restaurant.jpg"
+    "src": "/assets/img/restaurant.jpg"
   },
   {
     "name": "Strip Club",
-    "src": "/spyfall/assets/img/strip-club.jpg"
+    "src": "/assets/img/strip-club.jpg"
   },
   {
     "name": "Supermarket",
-    "src": "/spyfall/assets/img/supermarket.jpg"
+    "src": "/assets/img/supermarket.jpg"
   },
   {
     "name": "Train Station",
-    "src": "/spyfall/assets/img/train-station.jpg"
+    "src": "/assets/img/train-station.jpg"
   },
   {
     "name": "Wedding",
-    "src": "/spyfall/assets/img/wedding.jpg"
+    "src": "/assets/img/wedding.jpg"
   }
 ]
