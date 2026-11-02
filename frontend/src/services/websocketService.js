@@ -8,8 +8,9 @@ export function unsubscribe(id) {
   delete subscribers[id];
 }
 
-const host = process.env.PRODUCTION
-  ? "wss://spyfall.andreasnicklaus.de/ws"
+const isProduction = process.env.NODE_ENV === "production";
+const host = isProduction
+  ? `wss://api.spyfall.andreasnicklaus.de/ws`
   : `ws://${window.location.hostname}:8080/ws`;
 
 const ws = new WebSocket(host);
