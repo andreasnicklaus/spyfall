@@ -17,7 +17,6 @@ import {
   Typography,
   Link as MaterialLink,
   Snackbar,
-  IconButton,
   Container,
   Alert,
   useScrollTrigger,
@@ -25,8 +24,7 @@ import {
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import FingerprintIcon from "@mui/icons-material/Fingerprint";
-import CloseIcon from "@mui/icons-material/Close";
-import { useEffect, useState, Fragment } from "react";
+import { useEffect, useState } from "react";
 import route, { initialize } from "./services/routerService";
 import { Seo } from "./components/Seo";
 import { subscribe, unsubscribe } from "./services/snackBarService";
@@ -174,19 +172,6 @@ function App() {
   function closeSnackBar() {
     setMessage("");
   }
-
-  // const action = (
-  //     <Fragment>
-  //         <IconButton
-  //             size="small"
-  //             aria-label="close"
-  //             color="inherit"
-  //             onClick={closeSnackBar}
-  //         >
-  //             <CloseIcon fontSize="small" />
-  //         </IconButton>
-  //     </Fragment>
-  // );
 
   const trigger = useScrollTrigger();
 
