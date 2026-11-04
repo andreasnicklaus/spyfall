@@ -1,7 +1,6 @@
 import { sendMessage, subscribe } from "./websocketService";
 import { addSnack } from "./snackBarService";
 import route from "./routerService";
-import locations from "./locations.json"
 
 class SpyfallGame {
     subscribers;
@@ -12,12 +11,18 @@ class SpyfallGame {
     timer;
     startTime;
     location;
+    playerId;
+    endsAt;
+    roundEnded;
 
     constructor() {
         this.subscribers = {};
         this.playerList = [];
         this.minutes = 6;
         this.time = "00:00";
+        this.playerId = this.loadProfile().playerId;
+        this.endsAt = null;
+        this.roundEnded = false;
         subscribe("SpyfallGame", {
             onMessageCallback: this.messageHandler,
             onErrorCallback: (error) => { route("/"); this.resetGame(); addSnack("Unknown websocket error"); console.error(new Date().toLocaleString('de'), error) },
@@ -38,6 +43,7 @@ class SpyfallGame {
     }
     setPlayerName(name) {
         this.playerName = name;
+        this.saveProfile({ playerName: name });
         this.updateSubs();
     }
     setMinutes(min) {
@@ -46,6 +52,7 @@ class SpyfallGame {
     }
     setRoomCode(code) {
         this.roomCode = code;
+        if (code) this.saveProfile({ roomCode: code });
         this.updateSubs()
     }
     setPlayerList(players) {
@@ -69,7 +76,47 @@ class SpyfallGame {
         if (this.timer) clearInterval(this.timer);
         this.timer = null;
         this.location = null;
+        this.endsAt = null;
+        this.roundEnded = false;
         this.updateSubs();
+    }
+
+    loadProfile() {
+        let profile = {};
+        try { profile = JSON.parse(localStorage.getItem("spyfall.profile") || "{}"); } catch (e) { /* use defaults */ }
+        const playerId = profile.playerId || (window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
+        const result = { ...profile, playerId };
+        try { localStorage.setItem("spyfall.profile", JSON.stringify(result)); } catch (e) { /* storage may be unavailable */ }
+        this.playerName = profile.playerName || null;
+        this.roomCode = profile.roomCode || null;
+        return result;
+    }
+
+    saveProfile(values = {}) {
+        try {
+            const current = JSON.parse(localStorage.getItem("spyfall.profile") || "{}");
+            localStorage.setItem("spyfall.profile", JSON.stringify({
+                version: 1, ...current, playerId: this.playerId,
+                playerName: this.playerName, roomCode: this.roomCode, ...values,
+            }));
+        } catch (e) { /* storage may be unavailable */ }
+    }
+
+    clearSavedRoom() {
+        this.saveProfile({ roomCode: "" });
+    }
+
+    getSavedProfile() {
+        try {
+            const profile = JSON.parse(localStorage.getItem("spyfall.profile") || "{}");
+            return {
+                playerId: this.playerId,
+                playerName: profile.playerName || this.playerName || "",
+                roomCode: profile.roomCode || this.roomCode || "",
+            };
+        } catch (e) {
+            return { playerId: this.playerId, playerName: this.playerName || "", roomCode: this.roomCode || "" };
+        }
     }
     getGameLeader() {
         return this.playerList.filter((player) => player.gameLeader)[0]?.playerName
@@ -81,36 +128,85 @@ class SpyfallGame {
         return this.playerList.some(({ spy }) => spy)
     }
     messageHandler = (msg) => {
-        const { type, roomCode, players, minutes, time, location } = msg
+        const { type, roomCode, players, minutes, time, location, endsAt, startedAt, gameInProgress, roundEnded } = msg
 
-        if (minutes) this.setMinutes(minutes);
+        if (typeof minutes === "number") this.setMinutes(minutes);
         if (players) this.setPlayerList(players);
-        if (location) this.setLocation(location);
+        if (roomCode) this.setRoomCode(roomCode);
+        if (Object.prototype.hasOwnProperty.call(msg, "location")) this.setLocation(location || null);
+        else if (type === "roomState" || type === "gameStart") this.setLocation(null);
+        if (Object.prototype.hasOwnProperty.call(msg, "endsAt")) this.setEndsAt(endsAt, startedAt, roundEnded);
 
         if (type === "RoomCreated") {
             this.setRoomCode(roomCode)
         } else if (type === "NoRoomWithRoomCode") {
             addSnack(`Error:  Room code ${roomCode} does not exist`)
             console.warn(`Error:  Room code ${roomCode} does not exist`)
+            this.clearSavedRoom();
             route("/")
             this.resetGame()
         } else if (type === "kickedFromRoom") {
+            this.clearSavedRoom();
             route("/");
             this.resetGame();
             addSnack("You have been kicked from the game");
         } else if (type === "gameStart") {
-            // this.startTimer();
+            this.setEndsAt(endsAt, startedAt, false);
             route("/game")
+        } else if (type === "roomState") {
+            this.roundEnded = !!roundEnded;
+            if (gameInProgress) route("/game");
+            else route("/wait");
+        } else if (type === "gameStopped") {
+            this.stopLocalRound();
+            route("/wait");
+        } else if (type === "gameEnded") {
+            this.roundEnded = true;
+            this.setTime("00:00");
         } else if (type === "timeUpdate") {
             this.setTime(time)
             if (window.location.pathname !== '/game') route("/game")
         }
     }
 
+    setEndsAt(endsAt, startedAt, roundEnded = false) {
+        this.endsAt = endsAt || null;
+        this.roundEnded = !!roundEnded;
+        if (this.timer) clearInterval(this.timer);
+        if (!this.endsAt || this.roundEnded) {
+            if (this.endsAt && this.roundEnded) this.setTime("00:00");
+            return;
+        }
+        this.updateRemainingTime();
+        this.timer = setInterval(this.updateRemainingTime, 1000);
+    }
+
+    updateRemainingTime = () => {
+        if (!this.endsAt) return;
+        const remaining = Math.max(0, this.endsAt - Date.now());
+        const totalSeconds = Math.ceil(remaining / 1000);
+        this.setTime(`${Math.floor(totalSeconds / 60).toString().padStart(2, "0")}:${(totalSeconds % 60).toString().padStart(2, "0")}`);
+        if (remaining <= 0) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+    }
+
+    stopLocalRound() {
+        if (this.timer) clearInterval(this.timer);
+        this.timer = null;
+        this.endsAt = null;
+        this.roundEnded = false;
+        this.location = null;
+        this.time = "00:00";
+        this.updateSubs();
+    }
+
     joinRoom() {
         sendMessage({
             meta: "join",
             roomCode: this.roomCode,
+            playerId: this.playerId,
             playerName: this.playerName
         })
         route("/wait")
@@ -118,7 +214,9 @@ class SpyfallGame {
     createRoom() {
         sendMessage({
             meta: "create",
-            playerName: this.playerName
+            playerId: this.playerId,
+            playerName: this.playerName,
+            minutes: this.minutes
         })
         route("/wait")
     }
@@ -126,7 +224,8 @@ class SpyfallGame {
         if (this.roomCode) {
             sendMessage({
                 meta: "leave",
-                roomCode: this.roomCode
+                roomCode: this.roomCode,
+                playerId: this.playerId
             })
         }
         this.resetGame()
@@ -136,6 +235,7 @@ class SpyfallGame {
         sendMessage({
             meta: "readyUpdate",
             roomCode: this.roomCode,
+            playerId: this.playerId,
             ready: newStatus
         })
     }
@@ -143,14 +243,17 @@ class SpyfallGame {
         sendMessage({
             meta: "playerKick",
             roomCode: this.roomCode,
+            playerId: this.playerId,
             playerName
         })
     }
     updateMinutes(newValue) {
         if (newValue !== this.minutes) {
-            sendMessage({
+                sendMessage({
+                meta: "updateMinutes",
                 minutes: newValue,
-                roomCode: this.roomCode
+                roomCode: this.roomCode,
+                playerId: this.playerId
             })
         }
     }
@@ -158,57 +261,10 @@ class SpyfallGame {
         return this.playerList.every(({ ready }) => ready);
     }
     startGame() {
-        this.chooseSpy()
-        const location = locations[Math.floor(Math.random() * locations.length)]
-        sendMessage({
-            meta: "shareLocation",
-            roomCode: this.roomCode,
-            location: location
-        })
-        sendMessage({
-            type: "gameStart",
-            minutes: this.minutes,
-            roomCode: this.roomCode,
-        })
-        this.startTimer()
+        sendMessage({ meta: "startGame", roomCode: this.roomCode, playerId: this.playerId });
     }
-    startTimer() {
-        this.startTime = new Date();
-        clearInterval(this.timer)
-        this.timer = setInterval(() => {
-            const now = new Date()
-            const diff = now - this.startTime
-
-            if (diff >= this.minutes * 60000) {
-                this.stopTimer()
-                addSnack("The game ended! Vote now!")
-                return
-            }
-
-            const minutesDiff = Math.ceil(diff / 60000)
-            const secondDiff = Math.floor(diff / 1000) % 60
-
-            const timeMinutes = this.minutes - minutesDiff
-            const timeSeconds = 59 - secondDiff
-            if (this.isGameLeader()) this.sendTime(`${timeMinutes.toString().padStart(2, '0')}:${timeSeconds.toString().padStart(2, '0')}`)
-        }, 1000)
-    }
-    stopTimer() {
-        this.sendTime("00:00")
-        clearInterval(this.timer)
-    }
-    sendTime(time) {
-        sendMessage({
-            type: "timeUpdate",
-            time,
-            roomCode: this.roomCode
-        })
-    }
-    chooseSpy() {
-        sendMessage({
-            meta: "chooseSpy",
-            roomCode: this.roomCode,
-        })
+    stopGame() {
+        sendMessage({ meta: "stopGame", roomCode: this.roomCode, playerId: this.playerId });
     }
 }
 

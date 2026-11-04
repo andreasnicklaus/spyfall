@@ -71,7 +71,7 @@ wss.on("connection", (ws, req) => {
 
     ws.on("close", () => {
         clearInterval(ws.pingTimout);
-        handleClose(uuid);
+        handleClose(uuid, ws);
     });
 });
 
