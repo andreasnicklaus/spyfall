@@ -17,11 +17,12 @@ import locations from "../services/locations.json";
 export class Home extends Component {
     constructor(props) {
         super(props);
+        const saved = game.getSavedProfile();
         this.state = {
             joinDialogOpen: false,
             createDialogOpen: false,
-            playerName: "",
-            roomCode: "",
+            playerName: saved.playerName,
+            roomCode: saved.roomCode,
             message: ""
         }
     }
@@ -115,6 +116,12 @@ export class Home extends Component {
                             >
                                 Join a game
                             </Button>
+                            {this.state.roomCode && this.state.playerName && (
+                                <Button onClick={this.joinRoom} variant="text"
+                                    sx={{ color: "var(--color-accent-2)", textDecoration: "underline" }}>
+                                    Rejoin last room
+                                </Button>
+                            )}
                             <Button component={Link} to="/instructions" variant="text"
                                 sx={{ color: "var(--color-accent-2)", textDecoration: "underline" }}>
                                 Read the rules

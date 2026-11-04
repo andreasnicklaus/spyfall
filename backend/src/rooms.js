@@ -1,189 +1,235 @@
 const rooms = {};
+const connections = {};
 
-function leave(roomCode, uuid) {
-  if (!rooms[roomCode]) {
-    console.warn(
-      new Date().toLocaleString("de"),
-      `Room ${roomCode} does not exist`,
-    );
-    return;
-  }
+const locations = [
+  "yacht", "wedding", "train-station", "supermarket", "strip-club",
+  "restaurant", "jail", "hospital", "cruise-ship", "concert",
+  "coffee-shop", "cemetery", "beach-house", "bar",
+].map((name) => ({
+  name,
+  src: `/assets/img/${name}.jpg`,
+}));
 
-  if (!rooms[roomCode].players[uuid]) {
-    console.warn(
-      new Date().toLocaleString("de"),
-      `User ${uuid} is not in room ${roomCode}`,
-    );
-    return;
-  }
+function roomFor(roomCode) {
+  return roomCode && rooms[roomCode];
+}
 
-  if (Object.keys(rooms[roomCode].players).length === 1) {
-    console.log(new Date().toLocaleString("de"), `Room ${roomCode} deleted.`);
+function connected(player) {
+  return player && player.socket && player.socket.readyState === 1;
+}
+
+function broadcast(roomCode, data) {
+  const room = roomFor(roomCode);
+  if (!room) return;
+  Object.values(room.players).forEach((player) => {
+    if (connected(player)) player.socket.send(JSON.stringify(data));
+  });
+}
+
+function playerList(room, recipientId) {
+  return Object.values(room.players).map((player) => ({
+    playerName: player.playerName,
+    gameLeader: player.gameLeader,
+    ready: player.ready,
+    connected: player.connected,
+    spy: player.playerId === recipientId ? player.spy : false,
+  }));
+}
+
+function sendPlayerList(roomCode) {
+  const room = roomFor(roomCode);
+  if (!room) return;
+  Object.values(room.players).forEach((player) => {
+    if (connected(player)) {
+      player.socket.send(JSON.stringify({ players: playerList(room, player.playerId) }));
+    }
+  });
+}
+
+function personalizedState(roomCode, playerId) {
+  const room = rooms[roomCode];
+  const player = room.players[playerId];
+  const state = {
+    type: "roomState",
+    roomCode,
+    minutes: room.minutes,
+    gameInProgress: room.gameInProgress,
+    roundEnded: room.roundEnded,
+    startedAt: room.startedAt,
+    endsAt: room.endsAt,
+    players: playerList(room, playerId),
+  };
+  if (room.gameInProgress && !player.spy && room.location) state.location = room.location;
+  return state;
+}
+
+function sendState(roomCode, playerId) {
+  const room = roomFor(roomCode);
+  const player = room && room.players[playerId];
+  if (connected(player)) player.socket.send(JSON.stringify(personalizedState(roomCode, playerId)));
+}
+
+function clearRoundTimer(room) {
+  if (room.roundTimer) clearTimeout(room.roundTimer);
+  room.roundTimer = null;
+}
+
+function finishRound(roomCode) {
+  const room = roomFor(roomCode);
+  if (!room || !room.gameInProgress || room.roundEnded) return;
+  room.roundEnded = true;
+  room.roundTimer = null;
+  broadcast(roomCode, { type: "gameEnded", endsAt: room.endsAt });
+}
+
+function stopGame(roomCode) {
+  const room = roomFor(roomCode);
+  if (!room) return;
+  clearRoundTimer(room);
+  room.gameInProgress = false;
+  room.roundEnded = false;
+  room.location = null;
+  room.startedAt = null;
+  room.endsAt = null;
+  Object.values(room.players).forEach((player) => { player.spy = false; });
+  broadcast(roomCode, { type: "gameStopped" });
+  sendPlayerList(roomCode);
+}
+
+function leave(roomCode, playerId) {
+  const room = roomFor(roomCode);
+  if (!room || !room.players[playerId]) return;
+  const wasLeader = room.players[playerId].gameLeader;
+  delete room.players[playerId];
+  delete connections[playerId];
+
+  if (Object.keys(room.players).length === 0) {
+    clearRoundTimer(room);
     delete rooms[roomCode];
+    return;
+  }
+
+  if (wasLeader) {
+    const nextLeader = Object.values(room.players).find((player) => player.connected)
+      || Object.values(room.players)[0];
+    if (nextLeader) nextLeader.gameLeader = true;
+  }
+  sendPlayerList(roomCode);
+}
+
+function createRoom(playerId, playerName, socket, minutes = 6) {
+  let roomCode;
+  do roomCode = Math.random().toString(36).substring(2, 6); while (rooms[roomCode]);
+  rooms[roomCode] = {
+    players: {}, minutes: Math.max(1, Math.min(8, Number(minutes) || 6)), gameInProgress: false, roundEnded: false,
+    location: null, startedAt: null, endsAt: null, roundTimer: null,
+  };
+  rooms[roomCode].players[playerId] = {
+    playerId, playerName, socket, connected: true,
+    gameLeader: true, ready: false, spy: false,
+  };
+  connections[playerId] = { roomCode, socket };
+  socket.send(JSON.stringify({ type: "RoomCreated", roomCode }));
+  sendState(roomCode, playerId);
+  sendPlayerList(roomCode);
+}
+
+function joinRoom(roomCode, playerId, playerName, socket) {
+  const room = roomFor(roomCode);
+  if (!room) {
+    socket.send(JSON.stringify({ type: "NoRoomWithRoomCode", roomCode }));
+    return;
+  }
+
+  const existing = room.players[playerId];
+  if (existing) {
+    existing.socket = socket;
+    existing.connected = true;
+    existing.playerName = playerName;
   } else {
-    console.log(
-      new Date().toLocaleString("de"),
-      `User ${uuid} left room ${roomCode}`,
-    );
-    delete rooms[roomCode].players[uuid];
-  }
-}
-
-function broadCastMessage(roomCode, data) {
-  Object.entries(rooms[roomCode].players).forEach(([uuid, { socket }]) => {
-    socket.send(JSON.stringify(data));
-  });
-}
-
-function broadCastPlayerList(roomCode) {
-  Object.entries(rooms[roomCode].players).forEach(([clientUUID, client]) => {
-    client.socket.send(
-      JSON.stringify({
-        players: Object.values(rooms[roomCode].players).map((p) => ({
-          playerName: p.playerName,
-          gameLeader: p.gameLeader,
-          ready: p.ready,
-          spy: rooms[roomCode].players[clientUUID].spy ? p.spy : false,
-        })),
-      }),
-    );
-  });
-}
-
-function broadCastOnlyNonSpyMessage(roomCode, data) {
-  Object.entries(rooms[roomCode].players).forEach(([clientUUID, client]) => {
-    if (!rooms[roomCode].players[clientUUID].spy) {
-      client.socket.send(JSON.stringify(data));
-    }
-  });
-}
-
-function broadCastOnlySpyMessage(roomCode, data) {
-  Object.entries(rooms[roomCode].players).forEach(([clientUUID, client]) => {
-    if (rooms[roomCode].players[clientUUID].spy) {
-      client.socket.send(JSON.stringify(data));
-    }
-  });
-}
-
-function broadCastLocation(roomCode) {
-  broadCastOnlyNonSpyMessage(roomCode, { location: rooms[roomCode].location });
-  console.log(new Date().toLocaleString("de"), "Broadcasted location...");
-}
-
-module.exports.handleMessage = function (socket, uuid, data) {
-  // console.log("data", data)
-  let { meta, roomCode, playerName, ready, location } = data;
-
-  if (meta === "join") {
-    if (!rooms[roomCode]) {
-      socket.send(JSON.stringify({ type: "NoRoomWithRoomCode", roomCode }));
-      return;
-    }
-    if (!rooms[roomCode].players[uuid]) {
-      rooms[roomCode].players[uuid] = {
-        socket,
-        playerName,
-        gameLeader: false,
-        ready: false,
-        spy: false,
-      };
-      broadCastLocation(roomCode);
-      console.log(
-        new Date().toLocaleString("de"),
-        `Player ${playerName} (uuid: ${uuid}) joined game room ${roomCode}`,
-      );
-    }
-  } else if (meta === "leave") {
-    leave(roomCode, uuid);
-  } else if (meta === "create") {
-    // Create a random room code
-    while (!roomCode || rooms[roomCode])
-      roomCode = Math.random().toString(36).substring(2, 6);
-
-    // Create a room
-    rooms[roomCode] = { players: {} };
-
-    // Add user to the new room
-    rooms[roomCode].players[uuid] = {
-      socket,
-      playerName,
-      gameLeader: true,
-      ready: false,
-      spy: false,
+    room.players[playerId] = {
+      playerId, playerName, socket, connected: true,
+      gameLeader: false, ready: false, spy: false,
     };
-    console.log(new Date().toLocaleString("de"), `Room ${roomCode} created`);
+  }
+  connections[playerId] = { roomCode, socket };
+  sendState(roomCode, playerId);
+  sendPlayerList(roomCode);
+}
 
-    // Send confirmation with room code
-    socket.send(JSON.stringify({ type: "RoomCreated", roomCode }));
-  } else if (meta === "readyUpdate") {
-    rooms[roomCode].players[uuid].ready = ready;
-    console.log(
-      new Date().toLocaleString("de"),
-      `Player ${rooms[roomCode].players[uuid].playerName || uuid} is ready: ${ready}`,
-    );
-  } else if (meta === "playerKick") {
-    if (rooms[roomCode].players[uuid].gameLeader) {
-      Object.keys(rooms[roomCode].players).forEach((uuid) => {
-        if (rooms[roomCode].players[uuid].playerName === playerName) {
-          rooms[roomCode].players[uuid].socket.send(
-            JSON.stringify({
-              type: "kickedFromRoom",
-            }),
-          );
-          delete rooms[roomCode].players[uuid];
-        }
-      });
-      console.log(
-        new Date().toLocaleString("de"),
-        `Player ${playerName} was kicked`,
-      );
-    }
-  } else if (meta === "chooseSpy") {
-    if (rooms[roomCode].players[uuid].gameLeader) {
-      // When the game is restarted, the spy status has to be reset
-      Object.values(rooms[roomCode].players).forEach((p) => (p.spy = false));
+function startGame(roomCode, playerId) {
+  const room = roomFor(roomCode);
+  const leader = room && room.players[playerId];
+  if (!leader || !leader.gameLeader || Object.keys(room.players).length === 0) return;
+  clearRoundTimer(room);
+  Object.values(room.players).forEach((player) => { player.spy = false; });
+  const players = Object.values(room.players);
+  players[Math.floor(Math.random() * players.length)].spy = true;
+  room.location = locations[Math.floor(Math.random() * locations.length)];
+  room.startedAt = Date.now();
+  room.endsAt = room.startedAt + room.minutes * 60 * 1000;
+  room.gameInProgress = true;
+  room.roundEnded = false;
+  room.roundTimer = setTimeout(() => finishRound(roomCode), room.minutes * 60 * 1000);
 
-      const uuids = Object.keys(rooms[roomCode].players);
-      rooms[roomCode].players[
-        uuids[Math.floor(Math.random() * uuids.length)]
-      ].spy = true;
+  players.forEach((player) => {
+    if (connected(player)) {
+      const state = personalizedState(roomCode, player.playerId);
+      player.socket.send(JSON.stringify({ ...state, type: "gameStart" }));
+    }
+  });
+  sendPlayerList(roomCode);
+}
 
-      // console.log("Chose spy. It is", Object.values(rooms[roomCode]).filter(p => p.spy)[0].playerName)
-      // broadCastPlayerList(roomCode)
-      // return
-    }
-  } else if (meta === "shareLocation") {
-    if (rooms[roomCode].players[uuid].gameLeader) {
-      rooms[roomCode].location = location;
-      broadCastLocation(roomCode);
-    }
-  } else if (!meta) {
-    if (!rooms[roomCode]) return;
-    // console.log(`Sending back message: ${JSON.stringify(data)}`)
-    broadCastMessage(roomCode, { ...data });
+module.exports.handleMessage = function handleMessage(socket, connectionId, data) {
+  const { meta, roomCode, playerId, playerName, ready, minutes } = data;
+
+  if (meta === "create") {
+    createRoom(playerId, playerName, socket, minutes);
+    return;
+  }
+  if (meta === "join") {
+    joinRoom(roomCode, playerId, playerName, socket);
+    return;
   }
 
-  if (!rooms[roomCode]) return;
+  const connection = connections[playerId] || Object.values(connections).find((item) => item.socket === socket);
+  const actualRoomCode = connection?.roomCode || roomCode;
+  const room = roomFor(actualRoomCode);
+  const player = room && room.players[playerId];
+  if (!room || !player) return;
 
-  broadCastPlayerList(roomCode);
+  if (meta === "leave") {
+    leave(actualRoomCode, playerId);
+  } else if (meta === "readyUpdate") {
+    player.ready = !!ready;
+    sendPlayerList(actualRoomCode);
+  } else if (meta === "playerKick" && player.gameLeader) {
+    const target = Object.values(room.players).find((candidate) => candidate.playerName === data.playerName);
+    if (target) {
+      if (connected(target)) target.socket.send(JSON.stringify({ type: "kickedFromRoom" }));
+      leave(actualRoomCode, target.playerId);
+    }
+  } else if (meta === "updateMinutes" && player.gameLeader && !room.gameInProgress) {
+    room.minutes = Math.max(1, Math.min(8, Number(minutes) || 1));
+    broadcast(actualRoomCode, { minutes: room.minutes });
+  } else if (meta === "startGame") {
+    startGame(actualRoomCode, playerId);
+  } else if (meta === "stopGame" && player.gameLeader) {
+    stopGame(actualRoomCode);
+  }
 };
 
-module.exports.handleClose = function (uuid) {
-  console.log(
-    new Date().toLocaleString("de"),
-    `User ${uuid} closed the connection`,
-  );
-  Object.keys(rooms).forEach((roomCode) => {
-    if (rooms[roomCode].players[uuid]) {
-      leave(roomCode, uuid);
-      if (rooms[roomCode]) {
-        broadCastMessage(roomCode, {
-          players: Object.keys(rooms[roomCode].players).map(
-            (uuid) => rooms[roomCode].players[uuid].playerName,
-          ),
-        });
-      }
+module.exports.handleClose = function handleClose(connectionId, socket) {
+  Object.entries(connections).forEach(([playerId, connection]) => {
+    if (connection.socket !== socket) return;
+    const room = roomFor(connection.roomCode);
+    const player = room && room.players[playerId];
+    if (player && player.socket === socket) {
+      player.connected = false;
+      player.socket = null;
+      sendPlayerList(connection.roomCode);
     }
+    delete connections[playerId];
   });
 };
